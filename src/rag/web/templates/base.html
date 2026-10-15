@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}RAG-Test{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header>
+    <a href="{{ url_for('rag.index') }}">RAG-Test</a>
+    <a href="{{ url_for('rag.status') }}">Status</a>
+  </header>
+  <main>{% block content %}{% endblock %}</main>
+</body>
+</html>

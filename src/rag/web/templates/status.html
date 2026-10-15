@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Status</h1>
+{% if s.error %}<p class="error">{{ s.error }}</p>{% endif %}
+<table>
+  <tr><th>Ollama</th><td>{{ 'erreichbar' if s.ollama else 'nicht erreichbar' }}</td></tr>
+  <tr><th>Dokumente</th><td>{{ s.documents }}</td></tr>
+  <tr><th>Chunks</th><td>{{ s.chunks }}</td></tr>
+  <tr><th>Letzte Indexierung</th><td>{{ s.last_indexed or '–' }}</td></tr>
+  <tr><th>Embedding-Modell</th><td>{{ s.embed_model }}{% if s.ollama and not s.embed_available %} (nicht installiert){% endif %}</td></tr>
+  <tr><th>Chat-Modell</th><td>{{ s.chat_model }}{% if s.ollama and not s.chat_available %} (nicht installiert){% endif %}</td></tr>
+</table>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Frage an die Dokumente</h1>
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+<form method="post" action="{{ url_for('rag.ask') }}"
+      onsubmit="document.getElementById('busy').hidden = false;">
+  <textarea name="question" rows="3" required autofocus placeholder="Ihre Frage …">{{ question }}</textarea>
+  <label>Suchmodus
+    <select name="mode">
+      {% for m in modes %}
+      <option value="{{ m }}" {% if m == mode %}selected{% endif %}>
+        {{ {'hybrid': 'hybrid', 'vector': 'nur Vektor', 'bm25': 'nur BM25'}[m] }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label><input type="checkbox" name="show_chunks" {% if show_chunks %}checked{% endif %}> Chunks anzeigen</label>
+  <button type="submit">Fragen</button>
+  <p id="busy" hidden>Antwort wird generiert … das kann einen Moment dauern.</p>
+</form>
+{% endblock %}

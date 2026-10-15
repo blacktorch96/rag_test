@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Antwort</h1>
+<p class="question">{{ question }}</p>
+<div class="answer">{{ answer.text }}</div>
+{% if answer.hits %}
+<h2>Quellen</h2>
+<ol class="sources">
+  {% for hit in answer.hits %}
+  <li>
+    <strong>{{ hit.path }}</strong><br>
+    <span class="muted">{{ hit.heading_path }} · Score {{ '%.4f'|format(hit.score) }}</span>
+    <details {% if show_chunks %}open{% endif %}>
+      <summary>Chunk-Text</summary>
+      <pre>{{ hit.text }}</pre>
+    </details>
+  </li>
+  {% endfor %}
+</ol>
+{% endif %}
+<p><a href="{{ url_for('rag.index') }}">Neue Frage</a></p>
+{% endblock %}

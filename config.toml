@@ -1,0 +1,27 @@
+[corpus]
+root = "C:\\local\\dev\\sourcerer\\transkripte"       # unter Linux anpassbar
+
+[store]
+path = "rag.db"                   # relativ zu dieser Datei
+
+[ollama]
+base_url = "http://localhost:11434"
+embed_model = "bge-m3"            # vorher: ollama pull bge-m3
+chat_model = "qwen3.5:9b"         # austauschbar
+num_ctx = 8192
+
+[chunking]
+target_tokens = 500
+max_tokens = 800
+overlap_tokens = 60
+
+[retrieval]
+top_k_vector = 20
+top_k_bm25 = 20
+final_k = 6
+rrf_k = 60
+
+[web]
+host = "127.0.0.1"                # "0.0.0.0" nur bewusst setzen (keine Authentifizierung)
+port = 5080
+threads = 4                       # waitress im Betrieb
