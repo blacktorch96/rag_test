@@ -15,11 +15,12 @@ from .errors import RagError
 from .ollama_client import OllamaClient
 
 app = typer.Typer(add_completion=False, help="Lokale RAG-Testpipeline.")
-_state: dict[str, Path | None] = {"config": None}
+_state: dict = {"config": None, "profile": None}
 
 
 @app.callback()
 def main(config: Path = typer.Option(None, "--config", help="Pfad zur config.toml"),
+         profile: str = typer.Option(None, "--profile", "-p", help="Profil aus config.toml"),
          verbose: bool = typer.Option(False, "--verbose", "-v", help="Ausführliches Logging")) -> None:
     """Setzt Konfigurationspfad, Logging und UTF-8-Ausgabe."""
     for stream in (sys.stdout, sys.stderr):
@@ -27,6 +28,7 @@ def main(config: Path = typer.Option(None, "--config", help="Pfad zur config.tom
     logging.basicConfig(level=logging.INFO if verbose else logging.WARNING,
                         format="%(levelname)s %(name)s: %(message)s")
     _state["config"] = config
+    _state["profile"] = profile
 
 
 def guarded(func: Callable) -> Callable:
@@ -44,7 +46,7 @@ def guarded(func: Callable) -> Callable:
 
 def _cfg() -> Config:
     """Lädt die Konfiguration gemäß --config."""
-    return load_config(_state["config"])
+    return load_config(_state["config"], _state["profile"])
 
 
 @app.command()

@@ -5,6 +5,15 @@
 <form method="post" action="{{ url_for('rag.ask') }}"
       onsubmit="document.getElementById('busy').hidden = false;">
   <textarea name="question" rows="3" required autofocus placeholder="Ihre Frage …">{{ question }}</textarea>
+  {% if profiles %}
+  <label>Profil
+    <select name="profile">
+      {% for p in profiles %}
+      <option value="{{ p }}" {% if p == profile %}selected{% endif %}>{{ p }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  {% endif %}
   <label>Suchmodus
     <select name="mode">
       {% for m in modes %}
@@ -17,4 +26,13 @@
   <button type="submit">Fragen</button>
   <p id="busy" hidden>Antwort wird generiert … das kann einen Moment dauern.</p>
 </form>
+<script>
+  // Strg+Enter (bzw. Cmd+Enter) im Fragefeld sendet das Formular ab.
+  document.querySelector('textarea[name="question"]').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      this.form.requestSubmit();
+    }
+  });
+</script>
 {% endblock %}

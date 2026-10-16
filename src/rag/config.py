@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import os
 import tomllib
-from dataclasses import dataclass, field, fields
+from dataclasses import dataclass, field, fields, replace
 from pathlib import Path
 from typing import Any
 
@@ -57,14 +57,36 @@ class WebCfg:
 
 
 @dataclass(frozen=True)
+class ProfileCfg:
+    """Ein Profil: eigener Dokumentenordner und eigene SQLite-Datei."""
+    root: Path = Path(".")
+    db: Path = Path("rag.db")
+
+
+@dataclass(frozen=True)
 class Config:
-    """Gesamtkonfiguration."""
+    """Gesamtkonfiguration; `profile` nennt das aktive Profil ("" = ohne Profile)."""
     corpus: CorpusCfg = field(default_factory=CorpusCfg)
     store: StoreCfg = field(default_factory=StoreCfg)
     ollama: OllamaCfg = field(default_factory=OllamaCfg)
     chunking: ChunkingCfg = field(default_factory=ChunkingCfg)
     retrieval: RetrievalCfg = field(default_factory=RetrievalCfg)
     web: WebCfg = field(default_factory=WebCfg)
+    profiles: dict[str, ProfileCfg] = field(default_factory=dict)
+    profile: str = ""
+
+    def with_profile(self, name: str | None) -> "Config":
+        """Liefert die Konfiguration mit Korpus und Datenbank des Profils `name`."""
+        if not self.profiles:
+            if name:
+                raise ConfigError(f"Unbekanntes Profil: {name}")
+            return self
+        name = name or self.profile or next(iter(self.profiles))
+        if name not in self.profiles:
+            raise ConfigError(f"Unbekanntes Profil: {name} (verfügbar: {', '.join(self.profiles)})")
+        prof = self.profiles[name]
+        return replace(self, corpus=CorpusCfg(root=prof.root), store=StoreCfg(path=prof.db),
+                       profile=name)
 
 
 def _section(cls: type, data: dict[str, Any], name: str, base: Path) -> Any:
@@ -85,19 +107,34 @@ def _section(cls: type, data: dict[str, Any], name: str, base: Path) -> Any:
     return cls(**values)
 
 
-def load_config(path: Path | None = None) -> Config:
-    """Lädt die TOML-Datei (Standard: $RAG_CONFIG oder ./config.toml)."""
+def load_config(path: Path | None = None, profile: str | None = None) -> Config:
+    """Lädt die TOML-Datei (Standard: $RAG_CONFIG oder ./config.toml).
+
+    Mit `[profiles.<name>]`-Abschnitten (Schlüssel `root`, `db`) wird `profile` aktiviert;
+    ohne Angabe gilt `default_profile` bzw. das erste Profil.
+    """
     path = Path(path or os.environ.get("RAG_CONFIG", "config.toml")).resolve()
     if not path.is_file():
         raise ConfigError(f"Konfigurationsdatei nicht gefunden: {path}")
     with path.open("rb") as fh:
         raw = tomllib.load(fh)
+    default_profile = raw.pop("default_profile", "")
+    raw_profiles = raw.pop("profiles", {})
+    if not isinstance(default_profile, str) or not isinstance(raw_profiles, dict):
+        raise ConfigError("default_profile muss Text und [profiles] eine Tabelle sein")
     parts = {"corpus": CorpusCfg, "store": StoreCfg, "ollama": OllamaCfg,
              "chunking": ChunkingCfg, "retrieval": RetrievalCfg, "web": WebCfg}
     unknown = set(raw) - set(parts)
     if unknown:
         raise ConfigError(f"Unbekannte Abschnitte: {', '.join(sorted(unknown))}")
-    cfg = Config(**{n: _section(c, raw.get(n, {}), n, path.parent) for n, c in parts.items()})
+    profiles = {}
+    for name, data in raw_profiles.items():
+        if not isinstance(data, dict) or set(data) != {"root", "db"}:
+            raise ConfigError(f"[profiles.{name}] benötigt genau die Schlüssel root und db")
+        profiles[name] = _section(ProfileCfg, data, f"profiles.{name}", path.parent)
+    cfg = Config(**{n: _section(c, raw.get(n, {}), n, path.parent) for n, c in parts.items()},
+                 profiles=profiles, profile=default_profile)
+    cfg = cfg.with_profile(profile)
     validate(cfg)
     return cfg
 

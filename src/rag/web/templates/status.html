@@ -2,6 +2,9 @@
 {% block content %}
 <h1>Status</h1>
 {% if s.error %}<p class="error">{{ s.error }}</p>{% endif %}
+{% if profiles %}<p>Profil:
+  {% for p in profiles %}{% if p == profile %}<strong>{{ p }}</strong>{% else %}<a href="{{ url_for('rag.status', profile=p) }}">{{ p }}</a>{% endif %}{% if not loop.last %} · {% endif %}{% endfor %}
+</p>{% endif %}
 <table>
   <tr><th>Ollama</th><td>{{ 'erreichbar' if s.ollama else 'nicht erreichbar' }}</td></tr>
   <tr><th>Dokumente</th><td>{{ s.documents }}</td></tr>

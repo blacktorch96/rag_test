@@ -1,8 +1,23 @@
+# Profile: jeweils eigener Dokumentenordner und eigene Datenbank.
+# Auswahl in der Weboberfläche (Dropdown) bzw. per `rag --profile <name> ...`.
+# Ohne [profiles.*] gelten [corpus] und [store] unverändert.
+default_profile = "stanz"
+
+[profiles.stanz]
+root = "data/"
+db = "stanz.db"
+
+[profiles.sourcerer]
+root = "C:\\local\\dev\\sourcerer\\transkripte"
+db = "rag.db"
+
 [corpus]
-root = "C:\\local\\dev\\sourcerer\\transkripte"       # unter Linux anpassbar
+#root = "C:\\local\\dev\\sourcerer\\transkripte"       # unter Linux anpassbar
+root = "data/"
 
 [store]
-path = "rag.db"                   # relativ zu dieser Datei
+#path = "rag.db"                   # relativ zu dieser Datei
+path = "stanz.db"                   # relativ zu dieser Datei
 
 [ollama]
 base_url = "http://localhost:11434"

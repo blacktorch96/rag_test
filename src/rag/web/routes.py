@@ -3,19 +3,31 @@ from __future__ import annotations
 
 import sqlite3
 
-from flask import Blueprint, current_app, g, jsonify, render_template, request
+from flask import Blueprint, abort, current_app, g, jsonify, render_template, request
 
 from .. import generator, retriever, store
 from ..config import Config
-from ..errors import RagError
+from ..errors import ConfigError, RagError
 from ..ollama_client import OllamaClient
 
 bp = Blueprint("rag", __name__)
 
 
 def _cfg() -> Config:
-    """Konfiguration der laufenden App."""
-    return current_app.extensions["rag_cfg"]
+    """Konfiguration der laufenden App, bezogen auf das per `profile` gewählte Profil."""
+    if "cfg" not in g:
+        try:
+            g.cfg = current_app.extensions["rag_cfg"].with_profile(request.values.get("profile"))
+        except ConfigError:
+            abort(400, "Unbekanntes Profil")
+    return g.cfg
+
+
+@bp.app_context_processor
+def _profiles() -> dict:
+    """Stellt Profilliste und aktives Profil allen Templates bereit."""
+    cfg = _cfg()
+    return {"profiles": list(cfg.profiles), "profile": cfg.profile}
 
 
 def _client() -> OllamaClient:

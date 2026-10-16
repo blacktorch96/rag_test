@@ -8,8 +8,9 @@
 </head>
 <body>
   <header>
-    <a href="{{ url_for('rag.index') }}">RAG-Test</a>
-    <a href="{{ url_for('rag.status') }}">Status</a>
+    <a href="{{ url_for('rag.index', profile=profile or None) }}">RAG-Test</a>
+    <a href="{{ url_for('rag.status', profile=profile or None) }}">Status</a>
+    {% if profile %}<span class="muted">Profil: {{ profile }}</span>{% endif %}
   </header>
   <main>{% block content %}{% endblock %}</main>
 </body>
